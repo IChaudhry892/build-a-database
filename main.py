@@ -1,4 +1,6 @@
 from data_store import KVStore
+import os
+import sys
 
 # Initialize the in-memory data store
 database_memory = KVStore()
@@ -11,7 +13,7 @@ def run_cli():
     while True:
         try:
             # Prompt for user input
-            input_line = input("database>> ").strip()
+            input_line = input().strip()
 
             # Skip empty input
             if len(input_line) == 0:
@@ -42,25 +44,44 @@ def parse_and_execute_command(input_line):
         if len(parts) >= 3:
             key = parts[1]
             value = parts[2]
-            print(f"SET command received. Key: {key}, Value: {value}")
+
             # Save the key-value pair to the in-memory data store
             database_memory.set(key, value)
+
+            # Persist to disk using append-only writes
+            with open("data.db", "a") as file:
+                file.write(f"{key},{value}\n")
         else:
             print("SET USAGE: SET <key> <value>")
     elif action == "GET":
         # Check if we have enough parts for GET command
         if len(parts) >= 2:
             key = parts[1]
-            print(f"GET command received. Key: {key}")
-            value = database_memory.get(key)
+
             # Retrieve the value from the in-memory data store and print it
-            if value:
+            value = database_memory.get(key)
+            if value is not None:
                 print(value)
             else:
-                print("ERROR: Key not found")
+                print("ERROR: Key not found", file=sys.stderr)
         else:
             print("GET USAGE: GET <key>")
 
+def replay_log():
+    """
+    This function replays the log from the data.db file to rebuild the in-memory state of the key-value store.
+    It reads each line from the file, parses the key and value, and correctly updates the in-memory data store.
+    """
+    if os.path.exists("data.db"):
+        with open("data.db", "r") as file:
+            for line in file:
+                line = line.strip()
+                if line:
+                    parts = line.split(",", 1) # Split into key and value
+                    if len(parts) == 2:
+                        key, value = parts
+                        database_memory.set(key, value)
+
 if __name__ == "__main__":
-    # First, open data.db and replay the log to reconstruct the in-memory state (not implemented here)
+    replay_log()
     run_cli()
