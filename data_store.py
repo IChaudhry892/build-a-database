@@ -3,9 +3,9 @@ class KVStore:
         # Initialize the data store as an empty list of tuples (key, value)
         self.data = []
 
-    def set(self, key, value):
+    def set(self, key: str, value: str) -> None:
         """
-        This method sets the value for a given key in the data store. If the key already exists, it updates the value. If the key does not exist, it adds a new key-value pair to the data store.
+        Sets the value for a given key. Updates the value if the key already exists.
         """
         # Check if the key already exists in the data store
         for i, (k, v) in enumerate(self.data):
@@ -17,9 +17,9 @@ class KVStore:
         # If the key does not exist, add a new key-value pair to the data store
         self.data.append((key, value))
 
-    def get(self, key):
+    def get(self, key: str) -> str | None:
         """
-        This method retrieves the value for a given key from the data store. If the key does not exist, it returns None.
+        Retrieves the value for a given key. Returns None if the key does not exist.
         """
         # Search for the key in the data store
         for k, v in self.data:
